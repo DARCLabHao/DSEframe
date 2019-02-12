@@ -1,0 +1,49 @@
+I_BT1173: LOG file is generated. (ave8.LOG.gz)
+I_BT1921: License has been successfully obtained by FLEXlm.
+I_BT2619: Synthesize in ASIC mode.
+I_BT6773: The BLIB and FLIB files are loaded.
+	/proj/cad/cwb-6.1/packages/asic_45.BLIB
+	/proj/cad/cwb-6.1/packages/asic_45.FLIB
+I_BT4169: All signals are synthesized as ascending bit-order because all declared signals are of ascending bit-order.
+I_BT4874: for loop is unrolled at every 4 iterations
+	[Source Lines]
+	33(ave8.c):         for (i = 7; i > 0; i--) { 	
+I_BT4874: for loop is unrolled at every 4 iterations
+	[Source Lines]
+	41(ave8.c):       for (i= 1; i< 8; i++) { 	
+I_BT4679: Array buff_0 was expanded.
+I_BT4679: Array buff_1 was expanded.
+I_BT4679: Array buff_2 was expanded.
+I_BT4679: Array buff_3 was expanded.
+W_BT8766: Removed unreferenced assignment to variable 'buff_3_a01'.
+ [Action] Remove the assignment.
+	[Source Lines]
+	24(ave8.c): var(0:8)  buff[8] /* ATTR1 */= {0, 0, 0, 0, 0, 0, 0, 0};
+I_BT8371: Height of operation tree has been reduced.
+	[Source Lines]
+	42(ave8.c):             sum += buff[i]; 	
+I_BT4393: No memory required. Empty memory library file (ave8-auto.MLIB) generated.
+ [Action] Change type of array to 'mem' if required.
+          <OR> Specify appropriate "-a*" or "-ap*" options.
+I_BT4394: No memory required. Empty memory constraint file (ave8-auto.MCNT) generated.
+ [Action] Change type of array to 'mem' if required.
+          <OR> Specify appropriate "-a*" or "-ap*" options.
+I_BT4383: Generate memory library file / memory constraint file.
+	ave8-auto.MLIB
+	ave8-auto.MCNT
+I_BT4392: No arithmetic macro functional unit required.
+I_BT4398: The empty FLIB file generated since additional functional units are not required.
+I_BT4319: Empty FLIB file (ave8-amacro-auto.FLIB) generated. No functional units required.
+ [Action] If required, confirm the description.
+I_BT4318: Empty FCNT file (ave8-amacro-auto.FCNT) generated. No functional units required.
+ [Action] If required, confirm the description.
+I_BT4382: Generate functional unit library files / functional unit constraint files.
+	ave8-auto.FLIB
+	ave8-auto.FCNT
+	ave8-amacro-auto.FLIB
+	ave8-amacro-auto.FCNT
+I_BT4392: No arithmetic macro functional unit required.
+I_BT1190: The following ERROR/WARNING/INFO/TIPS exist.
+	 1 warning      exist
+	21 information  exist
+	---> SEE ave8.err FILE for DETAILS

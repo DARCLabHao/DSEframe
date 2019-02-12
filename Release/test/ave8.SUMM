@@ -1,0 +1,60 @@
+Copyright (C) 1988-2018 NEC Corporation. All rights reserved.
+bdltran version : 6.10.04 (Linux 64-bit) Thu Mar 22 14:18:17 JST 2018
+         (BIF version : 3.41F)
+         (LICflex version : 1.53 cylmd)
+         make at Thu Mar 22 14:30:59 JST 2018
+ Option  -EE -c1000 -s -Zresource_fcnt=GENERATE -Zresource_mcnt=GENERATE -Zdup_reset=YES -Zfolding_sharing=inter_stage -EE -lb /proj/cad/cwb-6.1/packages/asic_45.BLIB -lfl /proj/cad/cwb-6.1/packages/asic_45.FLIB ave8.IFF 
+
+bdlpars  -EE -I. -I/proj/cad/cwb-6.1/linux_x86_64/include -info_base_name ave8 ./ave8.c
+
+############## CyberII started (automatic scheduling mode) ##############
+[Clock period]    100,000 (1/10ps) [define]
+[Datapath delay]   90,000 (1/10ps)
+[Clock uncertainty] 10,000 (1/10ps)
+
+******* Initial # of operations in the input behavior description *******
+ === Operators ===
+  -  :  1  (32bit:1)
+  >  :  1  (32bit:1)
+  -- :  1  (32bit:1)
+  <  :  1  (32bit:1)
+  ++ :  1  (32bit:1)
+  += :  1  (32bit:1)
+  /  :  1  (32bit:1)
+  Data transfer : 22
+
+ === array / memory ===
+  read  :  3
+  write :  2
+
+********* After optimizing & expanding the behavior description *********
+ === Operators ===
+  +  :  7  (8bit:3, 9bit:2, 10bit:1, 11bit:1)
+  Data transfer : 39
+
+#########################  Synthesized Circuit  #########################
+[Performance index max/min/ave] 2 / 2 / 2.00
+
+  Module Name         : ave8
+  Basic Library Name  : CWBSTDBLIB
+
+  Total Area          :        710
+    Sequential        :        336
+    Combinational     :        374
+
+  Latency Index       :          1
+  Total States        :          1
+
+  Clock Period        :       10ns
+  Critical Path Delay :    1.335ns
+
+  Net                 :        532
+  Pin Pair            :      1,045
+
+  Port                :         18
+    In                :         10
+    Out               :          8
+
+TOTAL AREA 710 (FU: 374 + REG: 336 + MUX: 0 + DEC: 0 + MISC: 0) + pin pair 1,045(net 532) + 0FSM of 1state
+##### CyberII Normal finish (automatic scheduling mode) [ave8] #####
+
