@@ -32,7 +32,7 @@
          </sizepolicy>
         </property>
         <property name="title">
-         <string>Current File Path:</string>
+         <string>Output File Path:</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_4">
          <item row="0" column="0">
@@ -90,11 +90,9 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <column>
-            <property name="text">
-             <string notr="true">1</string>
-            </property>
-           </column>
+           <property name="columnCount">
+            <number>0</number>
+           </property>
           </widget>
          </item>
         </layout>

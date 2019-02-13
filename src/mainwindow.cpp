@@ -180,9 +180,6 @@ void MainWindow::cmd_error_occured(QProcess::ProcessError error)
 
 void MainWindow::resetData()
 {
-    method_history = "";
-    iteration_history = "";
-    method_cnt = -1;
     data_line_cnt = 0;
 
     ui->dataTreeWidget->clear();
@@ -225,6 +222,18 @@ int MainWindow::readCsvData(QString inputfilename, int num_line)
     QString line;
     QStringList list;
 
+    static QString method_history = "";
+    static QString iteration_history = "";
+
+    static int method_cnt = 0;
+
+    static int method_index = 0;
+    static int iteration_index = 0;
+    static int area_index = 0;
+    static int latency_index = 0;
+
+    static bool ignore_enabled = false;
+
     QFile file(inputfilename);
     try {
         file.open(QFile::ReadOnly | QFile::Text);
@@ -251,17 +260,57 @@ int MainWindow::readCsvData(QString inputfilename, int num_line)
                 ui->dataTreeWidget->setColumnCount(list.size());
                 ui->dataTreeWidget->setHeaderLabels(list);
 
+                method_index = list.indexOf(tr("Method"));
+                iteration_index = list.indexOf(tr("Iteration"));
                 area_index = list.indexOf(tr("AREA"));
                 latency_index = list.indexOf(tr("Latency"));
+
+                if ((method_index == -1) | (iteration_index == -1) | (area_index == -1) | (latency_index == -1)) {
+                    QMessageBox::warning(this,
+                                         tr("Error occured getting information"),
+                                         tr("Cannot find necessary information: Method, Iteration, AREA, Latency."));
+                    if (ui->stopButton->isEnabled()) {
+                        on_stopButton_clicked();
+                    }
+                    return 0;
+                }
+
+                method_history = "";
+                iteration_history = "";
+                method_cnt = -1;
+                ignore_enabled = false;
             }
 
             // Read data
             else {
-                if ((list.at(0) != method_history) || (list.at(1) != iteration_history)) {
+                if (list.size() != ui->dataTreeWidget->columnCount()) {
+                    if (ignore_enabled) continue;
+
+                    int ret = QMessageBox::warning(this,
+                                                   tr("Error occured reading data"),
+                                                   tr("A data set does not match the format\n"
+                                                      "Do you want to Ignore?"),
+                                                   QMessageBox::Abort | QMessageBox::YesToAll | QMessageBox::Ignore,
+                                                   QMessageBox::Abort);
+                    if (ret == QMessageBox::Abort) {
+                        if (ui->stopButton->isEnabled()) {
+                            on_stopButton_clicked();
+                        }
+                        return 0;
+                    }
+                    else {
+                        if (ret == QMessageBox::YesToAll) {
+                            ignore_enabled = true;
+                        }
+                        continue;
+                    }
+                }
+
+                if ((list.at(method_index) != method_history) || (list.at(iteration_index) != iteration_history)) {
                     method_cnt++;
 
-                    method_history = list.at(0);
-                    iteration_history = list.at(1);
+                    method_history = list.at(method_index);
+                    iteration_history = list.at(iteration_index);
 
                     data_points.resize(data_points.size() + 1);
                     op_points_local.resize(op_points_local.size() + 1);
@@ -271,8 +320,8 @@ int MainWindow::readCsvData(QString inputfilename, int num_line)
                 }
                 itm_parent.last()->addChild(new QTreeWidgetItem(list));
 
-                int area = list.at(area_index).toDouble();
-                int latency = list.at(latency_index).toDouble();
+                double area = list.at(area_index).toDouble();
+                double latency = list.at(latency_index).toDouble();
 
                 data_points[method_cnt] << QPointF(latency, area);
 
@@ -570,8 +619,8 @@ void MainWindow::updateGraph()
         plot->graph()->setLineStyle(QCPGraph::lsLine);
         setGraphData(op_points_local[i], plot->graph());
         plot->graph()->setVisible((itm_parent.at(i)->checkState(0) == Qt::Checked) && (ui->showOpRaioButton->isChecked()));
-        if (plot->graph()->visible()) {
-            plot->graph()->addToLegend();
+        if (!plot->graph()->visible()) {
+            plot->graph()->removeFromLegend();
         }
 
         // Add graph for all points for each iterations
@@ -582,8 +631,8 @@ void MainWindow::updateGraph()
         plot->graph()->setLineStyle(QCPGraph::lsNone);
         setGraphData(data_points[i],     plot->graph());
         plot->graph()->setVisible((itm_parent.at(i)->checkState(0) == Qt::Checked) && (ui->showAllRadioButton->isChecked()));
-        if (plot->graph()->visible()) {
-            plot->graph()->addToLegend();
+        if (!plot->graph()->visible()) {
+            plot->graph()->removeFromLegend();
         }
     }
 

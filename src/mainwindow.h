@@ -98,22 +98,13 @@ private:
     QVector< QVector< QPointF > > op_points_local;
     QVector< QVector< QPointF > > data_points;
 
-    int area_index;
-    int latency_index;
-
     int x_max;
     int y_max;
 
-    QString method_history;
-    QString iteration_history;
-
-    int method_cnt;
     int data_line_cnt;
 
     bool treeitem_change_enabled;
     bool checkall_checkbox_change_enabled;
-
-    QList< QThread* > threads;
 
 signals:
     void error(QString err);
