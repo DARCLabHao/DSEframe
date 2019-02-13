@@ -11,7 +11,7 @@ Newfile::Newfile(QWidget *parent) :
     ui->setupUi(this);
     this->setWindowTitle("New file");
 
-    m_sSettingsFile = QApplication::applicationDirPath() + "/demosettings.ini";
+    m_sSettingsFile = QApplication::applicationDirPath() + "/settings.ini";
     loadSettings();
 
     ui->directoryLineEdit->setText(default_path);

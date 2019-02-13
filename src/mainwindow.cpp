@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     resetData();
 
-    m_sSettingsFile = QApplication::applicationDirPath() + "/demosettings.ini";
+    m_sSettingsFile = QApplication::applicationDirPath() + "/settings.ini";
     loadSettings();
 }
 
