@@ -1,6 +1,0 @@
-
-#@VERSION { 3.00 }
-#@LIB { ave8 }
-#@UNIT 1/10ps
-#@SYN_TOOL{DC}
-#@END { ave8 }
