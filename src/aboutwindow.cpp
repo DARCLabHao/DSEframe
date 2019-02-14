@@ -8,7 +8,7 @@ AboutWindow::AboutWindow(QWidget *parent) :
     ui(new Ui::AboutWindow)
 {
     ui->setupUi(this);
-    this->setWindowTitle("About DEEF");
+    this->setWindowTitle("About DSEframe");
     this->setFixedSize(this->size());
 
     QString image_path = QApplication::applicationDirPath() + "/darclab_logo_utd_grey.png";
