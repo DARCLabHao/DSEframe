@@ -27,7 +27,7 @@ Double click the DSEframe app or open it from command line.
 
 To use DSEframe, user need to create their own result in CSV format. The file format has to be exactly as follow (the examples folder contains some samples)
 
-Method,Iteration,ATTR,AREA,state,FU,REG,MUXrm ,DEC,pin_pair,net,max,min,ave,MISC,MEM,cp_delay,sim,Pmax,Pmin,Pave,Latency,BlockMemoryBit,DSP
+Method,Iteration,ATTR,AREA,state,FU,REG,MUXrm,DEC,pin_pair,net,max,min,ave,MISC,MEM,cp_delay,sim,Pmax,Pmin,Pave,Latency,BlockMemoryBit,DSP
 BF,412,0,928,6,265,456,195,0,1822,849,6,6,6,12,-,1.2401ns,-,-,-,-,62,-,-
 
 
