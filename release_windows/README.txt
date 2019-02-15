@@ -55,9 +55,9 @@ Latency: Latency of circuit
 BlockMemoryBit: BlockRAM bits in case of FPGAs
 DSP: Number of DSP macros in case of FPGAs only
 
-Out of the these entries Method, Iteration, Area and Latency MUST be incldued.
+Out of the these entries Method, Iteration, AREA and Latency MUST be incldued.
 
-There are several csv example files under "your_app_path/examples" for reference.
+There are several csv example files under "DSEframe_path/examples/" for reference.
 
 ## New File
 
