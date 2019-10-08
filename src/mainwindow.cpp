@@ -29,6 +29,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(watcher, SIGNAL(fileChanged(const QString & )),
             this,    SLOT(updateData(const QString & )));
 
+    x_var = "Latency";
+    y_var = "AREA";
     resetData();
 
     m_sSettingsFile = QApplication::applicationDirPath() + "/settings.ini";
@@ -85,7 +87,7 @@ void MainWindow::on_actionLoad_File_triggered()
     if (!fileName.isEmpty()) {
         resetData();
 
-        readCsvData(fileName, 0);
+        readCsvData(fileName);
         analyseData();
         updateGraph();
 
@@ -119,15 +121,15 @@ void MainWindow::on_actionAbout_triggered()
 void MainWindow::on_runButton_clicked()
 {
     cmd_process = new QProcess(this);
-    connect(cmd_process, SIGNAL(started()),
-            this, SLOT(on_cmd_started()));
-    connect(cmd_process, SIGNAL(finished(int,QProcess::ExitStatus)),
-            this, SLOT(on_cmd_finished()));
-    connect(cmd_process, SIGNAL(error(QProcess::ProcessError)),
-            this, SLOT(cmd_error_occured(QProcess::ProcessError)));
+    connect(cmd_process, SIGNAL(started()),                                     this, SLOT(on_cmd_started()));
+    connect(cmd_process, SIGNAL(finished(int,QProcess::ExitStatus)),            this, SLOT(on_cmd_finished()));
+    connect(cmd_process, SIGNAL(error(QProcess::ProcessError)),                 this, SLOT(cmd_error_occured(QProcess::ProcessError)));
+    connect(cmd_process, SIGNAL(readyReadStandardOutput()),                     this, SLOT(read_cmd_out()));
+    connect(cmd_process, SIGNAL(readyReadStandardError()),                      this, SLOT(read_cmd_err()));
 
     QString cmd = ui->textEdit->toPlainText();
     cmd_process->start(cmd);
+    cmd_process->waitForStarted(5000);
 }
 
 void MainWindow::on_stopButton_clicked()
@@ -168,6 +170,7 @@ void MainWindow::on_cmd_finished()
 void MainWindow::cmd_error_occured(QProcess::ProcessError error)
 {
     qDebug() << "Error! Error value = " << error;
+    qDebug() << cmd_process->errorString();
 
     switch (error) {
     case QProcess::FailedToStart:
@@ -175,6 +178,20 @@ void MainWindow::cmd_error_occured(QProcess::ProcessError error)
     default:
         cmd_process->kill();
         break;
+    }
+}
+
+void MainWindow::read_cmd_out()
+{
+    if (cmd_process) {
+        ui->consoleText->append(cmd_process->readAllStandardOutput());
+    }
+}
+
+void MainWindow::read_cmd_err()
+{
+    if (cmd_process) {
+        ui->consoleText->append(cmd_process->readAllStandardError());
     }
 }
 
@@ -189,8 +206,8 @@ void MainWindow::resetData()
     op_points_local.clear();
     op_points_all.clear();
 
-    x_max = 0;
-    y_max = 0;
+    x_max = 0.0;
+    y_max = 0.0;
 
     treeitem_change_enabled = false;
     checkall_checkbox_change_enabled = true;
@@ -202,7 +219,7 @@ void MainWindow::resetData()
 
 void MainWindow::updateData(const QString & filePath)
 {
-    data_line_cnt = readCsvData(filePath, data_line_cnt);
+    data_line_cnt = readCsvData(filePath);
     if (data_line_cnt == 0) {
         resetData();
     }
@@ -214,7 +231,7 @@ void MainWindow::updateData(const QString & filePath)
     watcher->addPath(filePath);
 }
 
-int MainWindow::readCsvData(QString inputfilename, int num_line)
+int MainWindow::readCsvData(QString inputfilename)
 {
     int line_cnt = 0;
     int i;
@@ -229,8 +246,8 @@ int MainWindow::readCsvData(QString inputfilename, int num_line)
 
     static int method_index = 0;
     static int iteration_index = 0;
-    static int area_index = 0;
-    static int latency_index = 0;
+    static int x_var_index = 0;
+    static int y_var_index = 0;
 
     static bool ignore_enabled = false;
 
@@ -252,7 +269,7 @@ int MainWindow::readCsvData(QString inputfilename, int num_line)
         line_cnt++;
 
         // if the current data is has not been read before, then continue
-        if (line_cnt > num_line) {
+        if (line_cnt > data_line_cnt) {
             list = line.split(",", QString::SkipEmptyParts);
 
             // Read head line
@@ -262,13 +279,13 @@ int MainWindow::readCsvData(QString inputfilename, int num_line)
 
                 method_index = list.indexOf(tr("Method"));
                 iteration_index = list.indexOf(tr("Iteration"));
-                area_index = list.indexOf(tr("AREA"));
-                latency_index = list.indexOf(tr("Latency"));
+                x_var_index = list.indexOf(x_var);
+                y_var_index = list.indexOf(y_var);
 
-                if ((method_index == -1) | (iteration_index == -1) | (area_index == -1) | (latency_index == -1)) {
+                if ((method_index == -1) | (iteration_index == -1) | (x_var_index == -1) | (y_var_index == -1)) {
                     QMessageBox::warning(this,
                                          tr("Error occured getting information"),
-                                         tr("Cannot find necessary information: Method, Iteration, AREA, Latency."));
+                                         "Cannot find necessary information: Method, Iteration, " + x_var + ", "  + y_var + ".");
                     if (ui->stopButton->isEnabled()) {
                         on_stopButton_clicked();
                     }
@@ -279,6 +296,16 @@ int MainWindow::readCsvData(QString inputfilename, int num_line)
                 iteration_history = "";
                 method_cnt = -1;
                 ignore_enabled = false;
+
+                QStringList list_vars = list;
+                list_vars.removeOne(tr("Method"));
+                list_vars.removeOne(tr("Iteration"));
+                ui->xAxisList->clear();
+                ui->yAxisList->clear();
+                ui->xAxisList->addItems(list_vars);
+                ui->yAxisList->addItems(list_vars);
+                ui->xAxisList->setCurrentIndex(x_var_index - 2);
+                ui->yAxisList->setCurrentIndex(y_var_index - 2);
             }
 
             // Read data
@@ -315,37 +342,41 @@ int MainWindow::readCsvData(QString inputfilename, int num_line)
                     data_points.resize(data_points.size() + 1);
                     op_points_local.resize(op_points_local.size() + 1);
 
+                    if (!itm_parent.empty()) {
+                        itm_parent.last()->setExpanded(false);
+                    }
                     itm_parent.append(new QTreeWidgetItem(ui->dataTreeWidget, list.mid(0, 2)));
                     itm_parent.last()->setCheckState(0, Qt::Checked);
+                    itm_parent.last()->setExpanded(true);
                 }
                 itm_parent.last()->addChild(new QTreeWidgetItem(list));
 
-                double area = list.at(area_index).toDouble();
-                double latency = list.at(latency_index).toDouble();
+                double x_value = list.at(x_var_index).toDouble();
+                double y_value = list.at(y_var_index).toDouble();
 
-                data_points[method_cnt] << QPointF(latency, area);
+                data_points[method_cnt] << QPointF(x_value, y_value);
 
-                x_max = (x_max > latency)? x_max : latency;
-                y_max = (y_max > area)? y_max : area;
+                x_max = (x_max > x_value)? x_max : x_value;
+                y_max = (y_max > y_value)? y_max : y_value;
 
                 // Decide if it is an optimal point for this interation
                 bool decision_op = true;
                 for(i = 0; i < op_points_local[method_cnt].size(); i++) {
-                    if((area >= op_points_local[method_cnt][i].y()) && (latency >= op_points_local[method_cnt][i].x())) {
+                    if((y_value >= op_points_local[method_cnt][i].y()) && (x_value >= op_points_local[method_cnt][i].x())) {
                         decision_op = false;
                         break;
                     }
-                    else if (latency <= op_points_local[method_cnt][i].x()) {
+                    else if (x_value <= op_points_local[method_cnt][i].x()) {
                         break;
                     }
                 }
                 if (decision_op)
                 {
                     // insert by latency order and remove points that no longer optimal
-                    op_points_local[method_cnt].insert(i, QPointF(latency, area));
+                    op_points_local[method_cnt].insert(i, QPointF(x_value, y_value));
 
                     for (i = i + 1; i < op_points_local[method_cnt].size(); i++) {
-                        if(area <= op_points_local[method_cnt][i].y()) {
+                        if(y_value <= op_points_local[method_cnt][i].y()) {
                             op_points_local[method_cnt].remove(i);
                             i--;
                         }
@@ -354,19 +385,19 @@ int MainWindow::readCsvData(QString inputfilename, int num_line)
                     // If it is optimal, then decide if it is optimal points for all
                     decision_op = true;
                     for(i = 0; i < op_points_all.size(); i++) {
-                        if((area >= op_points_all[i].y()) && (latency >= op_points_all[i].x())) {
+                        if((y_value >= op_points_all[i].y()) && (x_value >= op_points_all[i].x())) {
                             decision_op = false;
                             break;
                         }
-                        else if (latency <= op_points_all[i].x()) {
+                        else if (x_value <= op_points_all[i].x()) {
                             break;
                         }
                     }
                     if (decision_op) {
-                        op_points_all.insert(i, QPointF(latency, area));
+                        op_points_all.insert(i, QPointF(x_value, y_value));
 
                         for (i = i + 1; i < op_points_all.size(); i++) {
-                            if(area <= op_points_all[i].y()) {
+                            if(y_value <= op_points_all[i].y()) {
                                 op_points_all.remove(i);
                                 i--;
                             }
@@ -562,10 +593,10 @@ void MainWindow::initGraph()
     QCustomPlot *plot = ui->dataPlot;
 
     plot->clearGraphs();
-    plot->xAxis->setLabel("Latency");
-    plot->yAxis->setLabel("Area");
-    plot->xAxis->setRange(0, x_max + 10.0);
-    plot->yAxis->setRange(0, y_max + 100.0);
+    plot->xAxis->setLabel(x_var);
+    plot->yAxis->setLabel(y_var);
+    plot->xAxis->setRange(0, x_max * 1.1);
+    plot->yAxis->setRange(0, y_max * 1.1);
     plot->setInteractions(QCP::iRangeZoom | QCP::iRangeDrag | QCP::iSelectPlottables);
 
     plot->legend->setVisible(false);
@@ -587,8 +618,8 @@ void MainWindow::updateGraph()
 {
     QCustomPlot *plot = ui->dataPlot;
 
-    plot->xAxis->setRange(0, x_max + 10.0);
-    plot->yAxis->setRange(0, y_max + 100.0);
+    plot->xAxis->setRange(0, x_max * 1.1);
+    plot->yAxis->setRange(0, y_max * 1.1);
     plot->legend->clear();
     plot->legend->setVisible(true);
 
@@ -715,3 +746,63 @@ void MainWindow::on_checkAllCheckBox_stateChanged(int state)
     }
 }
 
+
+void MainWindow::on_xAxisList_activated(const QString &arg1)
+{
+    x_var = arg1;
+    resetData();
+    QString filename = ui->fileNameLabel->text();
+    updateData(filename);
+
+    watcher->addPath(filename);
+}
+
+void MainWindow::on_yAxisList_activated(const QString &arg1)
+{
+    y_var = arg1;
+    resetData();
+    QString filename = ui->fileNameLabel->text();
+    updateData(filename);
+
+    watcher->addPath(filename);
+}
+
+void MainWindow::on_xAxisLogCheck_toggled(bool checked)
+{
+    if (checked) {
+        ui->dataPlot->xAxis->setScaleType(QCPAxis::stLogarithmic);
+        QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
+        ui->dataPlot->xAxis->setTicker(logTicker);
+        ui->dataPlot->xAxis->setNumberFormat("eb");
+        ui->dataPlot->xAxis->setNumberPrecision(0);
+        ui->dataPlot->xAxis->setRangeLower(1e-5);
+    }
+    else {
+        ui->dataPlot->xAxis->setScaleType(QCPAxis::stLinear);
+        QSharedPointer<QCPAxisTickerFixed> logTicker(new QCPAxisTickerFixed);
+        ui->dataPlot->xAxis->setTicker(logTicker);
+        ui->dataPlot->xAxis->setNumberFormat("f");
+        ui->dataPlot->xAxis->setRangeLower(0);
+    }
+    updateGraph();
+}
+
+void MainWindow::on_yAxisLogCheck_toggled(bool checked)
+{
+    if (checked) {
+        ui->dataPlot->yAxis->setScaleType(QCPAxis::stLogarithmic);
+        QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
+        ui->dataPlot->yAxis->setTicker(logTicker);
+        ui->dataPlot->yAxis->setNumberFormat("eb");
+        ui->dataPlot->yAxis->setNumberPrecision(0);
+        ui->dataPlot->yAxis->setRangeLower(1e-5);
+    }
+    else {
+        ui->dataPlot->yAxis->setScaleType(QCPAxis::stLinear);
+        QSharedPointer<QCPAxisTickerFixed> logTicker(new QCPAxisTickerFixed);
+        ui->dataPlot->xAxis->setTicker(logTicker);
+        ui->dataPlot->xAxis->setNumberFormat("f");
+        ui->dataPlot->yAxis->setRangeLower(0);
+    }
+    updateGraph();
+}

@@ -49,11 +49,15 @@ private slots:
 
     void cmd_error_occured(QProcess::ProcessError error);
 
+    void read_cmd_out();
+
+    void read_cmd_err();
+
     void resetData();
 
     void updateData(const QString & filePath);
 
-    int readCsvData(QString inputfilename, int num_line);
+    int readCsvData(QString inputfilename);
 
     void analyseData();
 
@@ -81,6 +85,14 @@ private slots:
 
     void toggleGraphVisible(QCPLegend *legend, QCPAbstractLegendItem *item);
 
+    void on_xAxisList_activated(const QString &arg1);
+
+    void on_yAxisList_activated(const QString &arg1);
+
+    void on_xAxisLogCheck_toggled(bool checked);
+
+    void on_yAxisLogCheck_toggled(bool checked);
+
 private:
     Ui::MainWindow *ui;
 
@@ -98,8 +110,11 @@ private:
     QVector< QVector< QPointF > > op_points_local;
     QVector< QVector< QPointF > > data_points;
 
-    int x_max;
-    int y_max;
+    QString x_var;
+    QString y_var;
+
+    double x_max;
+    double y_max;
 
     int data_line_cnt;
 
